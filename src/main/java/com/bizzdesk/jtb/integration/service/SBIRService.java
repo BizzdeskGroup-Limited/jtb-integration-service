@@ -8,6 +8,7 @@ import com.gotax.framework.library.error.handling.TokenNotFoundException;
 import com.gotax.framework.library.sbirs.helpers.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,7 @@ public class SBIRService {
     }
 
     @PostConstruct
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 3600000)
     public void generateToken() throws GoTaxException {
 
         GenerateTokenRequest generateTokenRequest = new GenerateTokenRequest().setEmail(jtbUsername)
@@ -70,7 +71,7 @@ public class SBIRService {
         Optional<UtilsHash> utilsHashOptional = Optional.ofNullable(utilsHashRepository.findById("token").orElseThrow(
                 () -> new TokenNotFoundException("No Token Found in Database")));
         if(utilsHashOptional.isPresent()) {
-            token = utilsHashOptional.get().getUtilId();
+            token = utilsHashOptional.get().getUtilValue();
         }
         return token;
     }
@@ -78,8 +79,13 @@ public class SBIRService {
     public GetIndividualTaxPayersResponse getIndividualTaxPayers(GetIndividualTaxPayersRequest getIndividualTaxPayersRequest) throws TokenNotFoundException {
         GetIndividualTaxPayersResponse getIndividualTaxPayersResponse;
         String contextPath = JTBContextPath.GET_INDIVIDUAL_TAX_PAYERS;
+        logger.info(contextPath);
+        logger.info(getIndividualTaxPayersRequest.toString());
         HttpEntity<GetIndividualTaxPayersRequest> httpEntity = new HttpEntity<>(getIndividualTaxPayersRequest);
-        Optional<GetIndividualTaxPayersResponse> optionalGetIndividualTaxPayersResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, GetIndividualTaxPayersResponse.class, getToken()).getBody());
+        logger.info(getToken());
+        Optional<GetIndividualTaxPayersResponse> optionalGetIndividualTaxPayersResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, new ParameterizedTypeReference<GetIndividualTaxPayersResponse>() {
+        }, getToken()).getBody());
+
         if(optionalGetIndividualTaxPayersResponse.isPresent()) {
             getIndividualTaxPayersResponse = optionalGetIndividualTaxPayersResponse.get();
         } else {
@@ -91,8 +97,10 @@ public class SBIRService {
     public GetNonIndividualTaxPayersResponse getNonIndividualTaxPayers(GetNonIndividualTaxPayersRequest getNonIndividualTaxPayersRequest) throws TokenNotFoundException {
         GetNonIndividualTaxPayersResponse getNonIndividualTaxPayersResponse;
         String contextPath = JTBContextPath.GET_NON_INDIVIDUAL_TAX_PAYERS;
+        logger.info(contextPath);
         HttpEntity<GetNonIndividualTaxPayersRequest> httpEntity = new HttpEntity<>(getNonIndividualTaxPayersRequest);
-        Optional<GetNonIndividualTaxPayersResponse> optionalGetNonIndividualTaxPayersResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, GetNonIndividualTaxPayersResponse.class, getToken()).getBody());
+        Optional<GetNonIndividualTaxPayersResponse> optionalGetNonIndividualTaxPayersResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, new ParameterizedTypeReference<GetNonIndividualTaxPayersResponse>() {}, getToken()).getBody());
+
         if(optionalGetNonIndividualTaxPayersResponse.isPresent()) {
             getNonIndividualTaxPayersResponse = optionalGetNonIndividualTaxPayersResponse.get();
         } else {
@@ -105,7 +113,7 @@ public class SBIRService {
         GetNonIndividualTaxPayersPagedResponse getNonIndividualTaxPayersPagedResponse;
         String contextPath = JTBContextPath.GET_PAGED_NON_INDIVIDUAL_TAX_PAYERS;
         HttpEntity<GetNonIndividualTaxPayersPagedRequest> httpEntity = new HttpEntity<>(getNonIndividualTaxPayersPagedRequest);
-        Optional<GetNonIndividualTaxPayersPagedResponse> optionalGetNonIndividualTaxPayersPagedResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, GetNonIndividualTaxPayersPagedResponse.class, getToken()).getBody());
+        Optional<GetNonIndividualTaxPayersPagedResponse> optionalGetNonIndividualTaxPayersPagedResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, new ParameterizedTypeReference<GetNonIndividualTaxPayersPagedResponse>() {}, getToken()).getBody());
         if(optionalGetNonIndividualTaxPayersPagedResponse.isPresent()) {
             getNonIndividualTaxPayersPagedResponse = optionalGetNonIndividualTaxPayersPagedResponse.get();
         } else {
@@ -118,7 +126,7 @@ public class SBIRService {
         GetIndividualTaxPayersPagedResponse getIndividualTaxPayersPagedResponse;
         String contextPath = JTBContextPath.GET_PAGED_INDIVIDUAL_TAX_PAYERS;
         HttpEntity<GetIndividualTaxPayersPagedRequest> httpEntity = new HttpEntity<>(getIndividualTaxPayersPagedRequest);
-        Optional<GetIndividualTaxPayersPagedResponse> optionalGetIndividualTaxPayersPagedResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, GetIndividualTaxPayersPagedResponse.class, getToken()).getBody());
+        Optional<GetIndividualTaxPayersPagedResponse> optionalGetIndividualTaxPayersPagedResponse = Optional.ofNullable(restTemplate.exchange(jtbHostURL.concat(contextPath), HttpMethod.POST, httpEntity, new ParameterizedTypeReference<GetIndividualTaxPayersPagedResponse>() {}, getToken()).getBody());
         if(optionalGetIndividualTaxPayersPagedResponse.isPresent()) {
             getIndividualTaxPayersPagedResponse = optionalGetIndividualTaxPayersPagedResponse.get();
         } else {
