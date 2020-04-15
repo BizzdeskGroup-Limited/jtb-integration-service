@@ -5,6 +5,7 @@ node {
     stage 'Build Jar'
     echo 'Building Jar file...'
     sh 'mvn clean package -DskipTests'
+    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
     docker.withRegistry("${env.REGISTRY_PROTOCOL}://${env.REGISTRY_HOST}", 'docker_registry_credentials_id') {
         stage 'Build Docker Image'
         echo 'Building docker image....'
