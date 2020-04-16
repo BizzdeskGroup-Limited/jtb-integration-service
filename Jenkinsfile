@@ -7,8 +7,8 @@ node {
     sh 'mvn clean package -DskipTests'
     archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
     stage 'Build  Docker Image'
-    withDockerRegistry(credentialsId: 'docker_registry_credentials_id', url: 'https://devwsregistry.bizzdeskgroup.net/v2/_catalog') {
-        //docker.withRegistry("${env.REGISTRY_PROTOCOL}://${env.REGISTRY_HOST}", 'docker_registry_credentials_id') {
+    //withDockerRegistry(credentialsId: 'docker_registry_credentials_id', url: 'https://devwsregistry.bizzdeskgroup.net/v2/_catalog') {
+        docker.withRegistry("${env.REGISTRY_PROTOCOL}://${env.REGISTRY_HOST}", 'docker_registry_credentials_id') {
             stage 'Build Docker Image'
             echo 'Building docker image....'
             String imageName = "${env.REGISTRY_HOST}/jtb-integration-service:latest"
