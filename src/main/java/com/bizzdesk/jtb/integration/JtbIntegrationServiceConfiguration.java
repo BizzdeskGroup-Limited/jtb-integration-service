@@ -1,9 +1,6 @@
 package com.bizzdesk.jtb.integration;
 
-import com.bizzdesk.jtb.integration.kafka.interfaces.IndividualTaxPayersChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.IndividualTaxPayersPagedChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.NonIndividualTaxPayersChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.NonIndividualTaxPayersPagedChannel;
+import com.bizzdesk.jtb.integration.kafka.interfaces.*;
 import com.bizzdesk.jtb.integration.repository.UtilsHashRepository;
 import com.google.common.base.Predicate;
 import com.gotax.framework.library.filter.LogFilter;
@@ -31,7 +28,10 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @Configuration
 @EnableRedisRepositories(basePackageClasses = {UtilsHashRepository.class})
 @EnableScheduling
-@EnableBinding({GoTaxLogChannel.class, IndividualTaxPayersPagedChannel.class, NonIndividualTaxPayersChannel.class, NonIndividualTaxPayersPagedChannel.class, IndividualTaxPayersChannel.class})
+@EnableBinding({GoTaxLogChannel.class, IndividualTaxPayersPagedChannel.class,
+        NonIndividualTaxPayersChannel.class, NonIndividualTaxPayersPagedChannel.class,
+        IndividualTaxPayersChannel.class, AddAssetRequestChannel.class,
+        AddAssetResponseChannel.class})
 @EnableSwagger2
 public class JtbIntegrationServiceConfiguration {
 

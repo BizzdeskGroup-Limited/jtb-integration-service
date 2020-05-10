@@ -3,13 +3,15 @@ package com.bizzdesk.jtb.integration.service;
 import com.bizzdesk.jtb.integration.entity.redis.UtilsHash;
 import com.bizzdesk.jtb.integration.helpers.JTBContextPath;
 import com.bizzdesk.jtb.integration.helpers.ResponseCodes;
-import com.bizzdesk.jtb.integration.kafka.interfaces.IndividualTaxPayersChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.IndividualTaxPayersPagedChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.NonIndividualTaxPayersChannel;
-import com.bizzdesk.jtb.integration.kafka.interfaces.NonIndividualTaxPayersPagedChannel;
+import com.bizzdesk.jtb.integration.kafka.interfaces.*;
+import com.bizzdesk.jtb.integration.mapper.ModelMapper;
 import com.bizzdesk.jtb.integration.repository.UtilsHashRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gotax.framework.library.entity.helpers.AssetRequest;
+import com.gotax.framework.library.entity.helpers.AssetResponse;
 import com.gotax.framework.library.error.handling.GoTaxException;
 import com.gotax.framework.library.error.handling.TokenNotFoundException;
+import com.gotax.framework.library.helpers.GoTaxLogHelper;
 import com.gotax.framework.library.sbirs.helpers.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -51,6 +54,8 @@ public class SBIRService {
     private IndividualTaxPayersChannel individualTaxPayersChannel;
     private IndividualTaxPayersPagedChannel individualTaxPayersPagedChannel;
     private NonIndividualTaxPayersChannel nonIndividualTaxPayersChannel;
+    private AddAssetRequestChannel addAssetRequestChannel;
+    private AddAssetResponseChannel addAssetResponseChannel;
 
     private UtilsHashRepository utilsHashRepository;
     private RestTemplate restTemplate;
@@ -60,13 +65,17 @@ public class SBIRService {
                        NonIndividualTaxPayersPagedChannel nonIndividualTaxPayersPagedChannel,
                        IndividualTaxPayersChannel individualTaxPayersChannel,
                        IndividualTaxPayersPagedChannel individualTaxPayersPagedChannel,
-                       NonIndividualTaxPayersChannel nonIndividualTaxPayersChannel) {
+                       NonIndividualTaxPayersChannel nonIndividualTaxPayersChannel,
+                       AddAssetRequestChannel addAssetRequestChannel,
+                       AddAssetResponseChannel addAssetResponseChannel) {
         this.utilsHashRepository = utilsHashRepository;
         this.restTemplate = restTemplate;
         this.nonIndividualTaxPayersPagedChannel = nonIndividualTaxPayersPagedChannel;
         this.individualTaxPayersChannel = individualTaxPayersChannel;
         this.individualTaxPayersPagedChannel = individualTaxPayersPagedChannel;
         this.nonIndividualTaxPayersChannel = nonIndividualTaxPayersChannel;
+        this.addAssetRequestChannel = addAssetRequestChannel;
+        this.addAssetResponseChannel = addAssetResponseChannel;
     }
 
     @PostConstruct
@@ -236,6 +245,19 @@ public class SBIRService {
         String formattedTodayMinus7DaysLocalDate = todayMinus7DaysLocalDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
         return new DateRangeGenerator().setFromdate(formattedTodayMinus7DaysLocalDate)
                 .setTodate(formattedTodayLocalDate);
+    }
+
+    @ServiceActivator(inputChannel = "add-asset-request")
+    public void getAddAssetDetailMessage(Message<String> addAssetRequestMessage) {
+        try {
+            AssetResponse assetRequest = new ObjectMapper().readValue(addAssetRequestMessage.getPayload(), AssetResponse.class);
+            AddAssetDetailsRequest addAssetDetailsRequest = ModelMapper.mapAssetResponseToAddAssetDetailRequest(assetRequest);
+            AddAssetDetailsResponse addAssetDetailsResponse = addAssetDetails(addAssetDetailsRequest);
+            AssetResponse assetResponse = ModelMapper.mapAddAssetDetailResponseToAssetResponse(assetRequest, addAssetDetailsResponse);
+            addAssetResponseChannel.output().send(MessageBuilder.withPayload(assetResponse).build());
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
 }
